@@ -1,0 +1,27 @@
+@charset "utf-8";
+/* CSS Document */
+
+.filterable tr:first-child .filterable-popover,
+.filterable tr:first-child .filterable-popover-click ,
+.filterable tr:first-child a.filterable-popover-click {
+	color: inherit;
+	border-bottom-style: none;
+	cursor: hand;
+	cursor: pointer;
+	font-style: normal;
+	text-decoration: none;
+}
+.filterable tr:first-child .filterable-popover:hover,
+.filterable tr:first-child .filterable-popover-click:hover,
+.filterable tr:first-child a.filterable-popover-click:hover {
+	color: #5bb75b;
+	border-bottom-style: none;
+	font-style: normal;
+}
+.filterable tr:first-child .filterable-active {
+	color: #5bb75b;
+	font-style: italic;
+}
+.filterable-mismatch {
+	display: none;
+}
