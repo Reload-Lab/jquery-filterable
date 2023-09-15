@@ -15,7 +15,6 @@
     "LICENSE",
     "README.md",
     "dist/",
-    "lib/",
     "example/"
   ],
   "repository": {

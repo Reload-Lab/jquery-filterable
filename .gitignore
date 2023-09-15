@@ -1,5 +1,4 @@
 **/_notes
-/lib/*
 .bowerrc
 .yarnrc
 yarn.lock
