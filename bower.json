@@ -1,0 +1,34 @@
+{
+  "name": "Reload-Lab/jquery-filterable",
+  "description": "Simple filterable tables solution for use with jQuery and Bootstrap 4 popovers",
+  "main": "dist/jquery.filterable.js",
+  "authors": [
+    "Reload - Laboratorio Multimediale <info@reloadlab.it> (https://www.reloadlab.it)"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "jquery",
+    "popovers",
+    "bootstrap4",
+    "filter table"
+  ],
+  "homepage": "https://github.com/Reload-Lab/jquery-filterable",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Reload-Lab/jquery-filterable.git"
+  },
+  "dependencies": {
+    "jquery": "^3.7.0",
+	"jquery-migrate-official": "1.4.1",
+    "bootstrap": "4.6.2",
+	"font-awesome": "4.7.0",
+	"devbridge-autocomplete": "^1.4.11"
+  }
+}

@@ -1,0 +1,44 @@
+@charset "utf-8";
+/* CSS Document */
+
+/* FONT */
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap');
+/* $ FONT */
+
+
+body {
+	background: #006ba1;
+	font-family: 'Lato', sans-serif;
+	font-size: 18px;
+	color: #3a3a3a;
+}
+header {
+	padding: 20px 0;
+}
+header a.logo {
+	display: block;
+	width: 257px;
+	height: 83px;
+	margin: 0 auto;
+	background: url("img/logo.png") center center no-repeat;
+}
+.container-centro {
+	background: #fafafa;
+	padding: 45px 0;
+}
+.container-centro h1 {
+	font-size: 32px;
+	color: #006ba1;
+}
+footer {
+	background: #006ba1;
+	padding: 20px 0;
+}
+footer a {
+	font-weight: 700;
+	color: #fff;
+}
+footer a:hover {
+	color: #ffd105;
+	text-decoration: none;
+}

@@ -1,5 +1,15 @@
-// JavaScript Document
-
+/*!
+ * jQuery filterable Plugin
+ * https://github.com/Reload-Lab/jquery-filterable
+ *
+ * @updated September 15, 2023
+ * @version 1.0.0
+ *
+ * @author Domenico Gigante <domenico.gigante@reloadlab.it>
+ * @copyright (c) 2023 Reload Laboratorio Multimediale <info@reloadlab.it> (https://www.reloadlab.it)
+ * @license MIT
+ */
+ 
 /**
  * Filterable utilites
  */
@@ -38,7 +48,7 @@
 	var FilterableCell = function(cell, options)
 	{
 		this.$cell = $(cell); // jquery cella
-		this.match = null; // proprietà match
+		this.match = null; // proprietà valorizzata su true o false a seconda che la cella corrisponda o meno alla query
 		
 		// Oggetto opzioni
 		this.options = $.extend({}, $.fn.filterableCell.defaults, options);
@@ -65,7 +75,7 @@
 		},
 
 		/**
-		Imposta le classi match e mismatch
+		Imposta le classi css match e mismatch
 		a seconda della corrispondenza con la query
 		@method setMatch()
 		**/
@@ -153,7 +163,7 @@
 				@param {Object} event event object
 				@param {Object} editable filterable instance (as here it cannot accessed via data('editable'))
 				**/
-				this.$element.triggerHandler('init', this);
+				this.$cell.triggerHandler('init', this);
 			}, this);
 		},
 
@@ -178,12 +188,12 @@
 		// Return jquery object
 		return this.each(function()
 		{
-			var $this = $(this), // cella
+			var $this = $(this), // jquery cella
 				data = $this.data(datakey), // oggetto FilterableCell
 				options = typeof option === 'object' && option; // opzioni
 			
 			// Se l'oggetto FilterableCell non è stato inizializzato...
-			if(!data){
+			if(!data && typeof options === 'object'){
 				
 				// Inizializza l'oggetto FilterableCell e lo assegna alla tabella
 				$this.data(datakey, (data = new FilterableCell(this, options)));
@@ -203,7 +213,6 @@
 		
 		/**
 		Function to determine if the cell matches the user supplied filter.
-		
 		@property isMatch($cell, query)
 		@type function
 		@default null
@@ -227,7 +236,7 @@
 	var FilterableRow = function(row, options)
 	{
 		this.$row = $(row); // jquery riga
-		this.cells = []; // array cells
+		this.cells = []; // array oggetti FilterableCell
 		
 		// Oggetto opzioni
 		this.options = $.extend({}, $.fn.filterableRow.defaults, options);
@@ -245,16 +254,16 @@
 		constructor: FilterableRow,
     
 		/**
-		Ritorna una cella della riga in base al numero di colonna (index)
+		Ritorna una cella della riga in base al numero di colonna (colIndex)
 		@method cell()
 		**/
-		cell: function(index)
+		cell: function(colIndex)
 		{
-			return this.cells[index];
+			return this.cells[colIndex];
 		},
 
 		/**
-		Imposta le classi match e mismatch
+		Imposta le classi css match e mismatch
 		a seconda della corrispondenza con la query
 		@method setMatch()
 		**/
@@ -303,12 +312,12 @@
 		/**
 		Filtro per cella
 		Prende come valori la query (query)
-		e il numero della cella da filtrare (cellIndex)
+		e il numero della cella da filtrare (colIndex)
 		@method filter()
 		**/
-		filter: function(query, index)
+		filter: function(query, colIndex)
 		{
-			this.cells[index].isMatch(query);
+			this.cells[colIndex].isMatch(query);
 			this.setMatch(!this.hasMismatch());
 		},
     	
@@ -316,14 +325,19 @@
 		Esclude le colonne da non filtrare
 		@method ignoredColumn()
 		**/
-		ignoredColumn: function(index)
+		ignoredColumn: function(colIndex)
 		{
+			// Se l'opzione 'onlyColumns' è valorizzata...
 			if($.fn.filterableUtils.notNull(this.options.onlyColumns)){
 				
-				return $.inArray(index, this.options.onlyColumns) === -1;
+				// Ritorno true se la colonna non è tra quelle da filtrare
+				// Altrimenti ritorno false
+				return $.inArray(colIndex, this.options.onlyColumns) === -1;
 			}
 			
-			return $.inArray(index, this.options.ignoreColumns) !== -1;
+			// Ritorno true se la colonna è tra quelle da ignorare
+			// Altrimenti ritorno false
+			return $.inArray(colIndex, this.options.ignoreColumns) !== -1;
 		},
 		
 		/**
@@ -340,25 +354,23 @@
 			
 			// Cicla tutti i TD della riga
 			this.$row.children('td')
-				.each($.proxy(function(index, cell)
+				.each($.proxy(function(colIndex, cell)
 				{
 					// Se la cella è filtrabile...
-					if(!this.ignoredColumn(index)){
+					if(!this.ignoredColumn(colIndex)){
 						
 						// Inizializza l'oggetto FilterableCell
 						$(cell).filterableCell(this.options);
 						
-						// Aggiunge l'oggetto FilterableCell all'elemento TD
-						newCell = $(cell).data('filterableCell');
+						// Aggiunge l'oggetto FilterableCell all'array cells
+						this.cells.push($(cell).data('filterableCell'));
 					} 
 					// Altrimenti...
 					else{
 						
-						newCell = null;
+						// Aggiunge l'oggetto FilterableCell all'array cells
+						this.cells.push(null);
 					}
-					
-					// Aggiunge l'oggetto FilterableCell all'array cells
-					this.cells.push(newCell);
 				}, this));
         
 			// Finilize init
@@ -397,12 +409,12 @@
 		// Return jquery object
 		return this.each(function()
 		{
-			var $this = $(this), // riga
+			var $this = $(this), // jquery riga
 				data = $this.data(datakey), // oggetto FilterableRow
 				options = typeof option === 'object' && option; // opzioni
 			
 			// Se l'oggetto FilterableRow non è stato inizializzato...
-			if(!data){
+			if(!data && typeof options === 'object'){
 				
 				// Inizializza l'oggetto FilterableRow e lo assegna alla tabella
 				$this.data(datakey, (data = new FilterableRow(this, options)));
@@ -428,11 +440,11 @@
 	"use strict";
 	
 	// Costruttore
-	var Filterable = function(element, options)
+	var Filterable = function(table, options)
 	{
-		this.$element = $(element); // jquery tabella
-		this.rows = null; // array rows
-		this.popovers = null; // array popover
+		this.$table = $(table); // jquery tabella
+		this.rows = null; // array oggetti FilterableRow
+		this.popovers = null; // array oggetti FilterablePopover
 		this.queries = {}; // oggetto queries
 		
 		// Oggetto opzioni
@@ -454,30 +466,39 @@
 		Esclude le colonne da non filtrare
 		@method ignoredColumn()
 		**/
-		ignoredColumn: function(index)
+		ignoredColumn: function(colIndex)
 		{
+			// Se l'opzione 'onlyColumns' è valorizzata...
 			if($.fn.filterableUtils.notNull(this.options.onlyColumns)){
 				
-				return $.inArray(index, this.options.onlyColumns) === -1;
+				// Ritorno true se la colonna non è tra quelle da filtrare
+				// Altrimenti ritorno false
+				return $.inArray(colIndex, this.options.onlyColumns) === -1;
 			}
 			
-			return $.inArray(index, this.options.ignoreColumns) !== -1;
+			// Ritorno true se la colonna è tra quelle da ignorare
+			// Altrimenti ritorno false
+			return $.inArray(colIndex, this.options.ignoreColumns) !== -1;
 		},
 
 		/**
 		Ritorna la variabile della query string
 		@method filterHash()
 		**/
-		filterHash: function(index)
+		filterHash: function(colIndex)
 		{
-			var tableId = this.$element.attr('id');
+			// Attributo ID della tabella
+			var tableId = this.$table.attr('id');
 			
+			// Se presente l'attributo ID...
 			if(tableId != ''){
 				
-				return 'filter_' + tableId + '_' + index;
+				// Ritorna l'hash-var della colonna della tabella
+				return 'filter_' + tableId + '_' + colIndex;
 			}
 			
-			return 'filter_' + '_' + index;
+			// Ritorna l'hash-var della colonna senza identificativo della tabella
+			return 'filter_' + '_' + colIndex;
 		},
 
 		/**
@@ -489,7 +510,7 @@
 			this.rows = [];
 			
 			// Cicla tutti i TR, esclusa la prima riga 
-			this.$element.children('tbody,*')
+			this.$table.children('tbody,*')
 				.children('tr')
 				.each($.proxy(function(rowIndex, row)
 				{
@@ -505,28 +526,29 @@
 		},
 
 		/**
-		Genera l'array da passare a autocomplete plugin
+		Genera l'array dei valori da passare al plugin Autocomplete
 		@method autocompleteValues()
 		**/
-		autocompleteValues: function(cellIndex)
+		autocompleteValues: function(colIndex)
 		{
 			var keys = {};
 			
 			// Se le righe non sono state ancora raccolte nell'array rows...
 			if($.fn.filterableUtils.isNull(this.rows)){
 				
+				// Raccoglie tutte le righe nell'array rows
 				this.initRows();
 			}
 			
 			// Cicla tutte le righe 
 			$.each(this.rows, $.proxy(function(rowIndex, row)
 			{
-				// Include solo le righe che hanno qualche corrispondenza con la query
+				// Include solo le righe che hanno qualche corrispondenza con una query
 				if(!row.hasMismatch()){
 					
 					// Assegna una proprietà all'oggetto keys
 					// In questo modo evita i doppioni
-					keys[row.cell(cellIndex).value()] = '';
+					keys[row.cell(colIndex).value()] = '';
 				}
 			}, this));
 			
@@ -540,20 +562,22 @@
 		/**
 		Filtro per colonna
 		Prende come valori la query (query)
-		e il numero della colonna da filtrare (cellIndex)
+		e il numero della colonna da filtrare (colIndex)
 		@method filter()
 		**/
-		filter: function(query, cellIndex)
+		filter: function(query, colIndex)
 		{
 			// Se esiste la funzione beforeFilter...
 			if(typeof this.options.beforeFilter === 'function'){
 				
-				this.options.beforeFilter(this.$element, cellIndex, query);
+				// Esegue la funzione beforeFilter
+				this.options.beforeFilter(this.$table, colIndex, query);
 			}
 			
 			// Se le righe non sono state ancora raccolte nell'array rows...
 			if($.fn.filterableUtils.isNull(this.rows)){
 				
+				// Raccoglie tutte le righe nell'array rows
 				this.initRows();
 			}
 
@@ -561,16 +585,17 @@
 			$.each(this.rows, $.proxy(function(rowIndex, row)
 			{
 				// Su ogni riga esegue il filtro sulla cella sotto esame
-				row.filter(query, cellIndex);
+				row.filter(query, colIndex);
 			}, this));
 			
 			// Inserisce la query nell'oggetto queries
-			this.queries[cellIndex] = query;
+			this.queries[colIndex] = query;
 			
 			// Se esiste la funzione afterFilter...
 			if(typeof this.options.afterFilter === 'function'){
 				
-				this.options.afterFilter(this.$element, cellIndex, query);
+				// Esegue la funzione afterFilter
+				this.options.afterFilter(this.$table, colIndex, query);
 			}
 		},
 
@@ -578,7 +603,7 @@
 		Funzione collegata all'evento onFilter
 		@method onFilter()
 		**/
-		onFilter: function(popoverToggle, query, index)
+		onFilter: function(popoverToggle, query, colIndex)
 		{
 			var state = {};
 			
@@ -586,16 +611,16 @@
 			if(query === ''){
 				
 				// Remove the state
-				$.bbq.removeState(this.filterHash(index));
+				$.bbq.removeState(this.filterHash(colIndex));
 				
-				// Rimuove la classe 'filterable-active'
+				// Rimuove la classe css 'filterable-active'
 				$(popoverToggle).removeClass('filterable-active');
 			} 
 			// Altrimenti...
 			else{
 				
 				// Set the state
-				state[this.filterHash(index)] = query;
+				state[this.filterHash(colIndex)] = query;
 				$.bbq.pushState(state);
 				
 				// Aggiunge la classe 'filterable-active'
@@ -606,23 +631,24 @@
 			$(popoverToggle).popover('hide');
 
 			// Salva l'ultimo valore input con il valore query
-			this.popovers[index].input(query);
+			this.popovers[colIndex].input(query);
 			
 			// Filtra passando la query (params.newValue) 
-			// e il numero della colonna da filtrare (index)
-			this.filter(query, index);
+			// e il numero della colonna da filtrare (colIndex)
+			this.filter(query, colIndex);
 		},
 
 		/**
-		La funzione chiude tutti i popover aperti (in genere uno solo alla volta)
+		La funzione chiude tutti i filterablePopover aperti 
+		(in genere uno solo alla volta)
 		@method closePopovers()
 		**/
 		closePopovers: function(e)
 		{
-			// Cicla tutti i popover
+			// Cicla tutti i filterablePopover
 			$('[data-toggle="popover"]').each(function()
 			{
-				// Hide any open popovers when the anywhere else in the body is clicked
+				// Hide any open filterablePopover when the anywhere else in the body is clicked
 				if(!$(this).is(e.target) 
 					&& $(this).has(e.target).length === 0 
 					&& $('.popover').has(e.target).length === 0
@@ -636,37 +662,38 @@
 		Funzione collegata all'evento hashchange
 		@method hashChange()
 		**/
-		hashChange: function(popover, index)
+		hashChange: function(popover, colIndex)
 		{
-			var filterHash = this.filterHash(index),
+			var filterHash = this.filterHash(colIndex),
 				query = $.bbq.getState(filterHash) || '';
 				
 			// Imposta il valore del campo di ricerca con il valore di query
 			popover.input(query);
 			
-			// Se query è una stringa vuota...
+			// Se query non è una stringa vuota...
 			if(query !== ''){
 				
-				// Assegna la classe css active all'elemento toggle del popover
-				popover.$heading.addClass('filterable-active');
+				// Assegna la classe css 'filterable-active' al toggler del filterablePopover
+				popover.$toggler.addClass('filterable-active');
 			}
 			// Altrimenti...
 			else{
 				
-				// Rimuove la classe css active all'elemento toggle del popover
-				popover.$heading.removeClass('filterable-active');
+				// Rimuove la classe css 'filterable-active' al toggler del filterablePopover
+				popover.$toggler.removeClass('filterable-active');
 			}
 			
 			// Se query è uguale al corrispondente valore in queries
-			if(typeof this.queries[index] == 'undefined' 
-				|| query == this.queries[index]
+			if(typeof this.queries[colIndex] == 'undefined' 
+				|| query == this.queries[colIndex]
 			){
+				// Non viene eseguito il filtro
 				return;	
 			}
 			
 			// Filtra passando la query (query) 
-			// e il numero della colonna da filtrare (index)
-			this.filter(query, index);
+			// e il numero della colonna da filtrare (colIndex)
+			this.filter(query, colIndex);
 		},
 
 		/**
@@ -676,32 +703,68 @@
 		init: function()
 		{
 			// Add 'filterable' class to every filterable table
-			this.$element.addClass('filterable');
+			this.$table.addClass('filterable');
 
 			this.popovers = [];
 			
-			// Init Bootstrap popover for each heading
-			this.$element.find('tr:first')
+			// Imposta 'ignoreColumns' e 'onlyColumns' attraverso l'attributo data
+			this.$table.find('tr:first')
 				.first()
 				.children('td,th')
-				.each($.proxy(function(index, heading)
+				.each($.proxy(function(colIndex, heading)
+				{
+					var $th = $(heading);
+					
+					// Se esiste Ignore...
+					if($th.data('ftIgnore')){
+						
+						if($.inArray(colIndex, this.options.ignoreColumns) === -1){
+							
+							// Aggiunge l'indice della colonna a quelle da non filtrare
+							this.options.ignoreColumns.push(colIndex);
+						}
+					}
+					
+					// Se esiste Filter...
+					if($th.data('ftFilter')){
+						
+						// Se 'onlyColumns' è null...
+						if($.fn.filterableUtils.isNull(this.options.onlyColumns)){
+							
+							// Imposta 'onlyColumns' come array
+							this.options.onlyColumns = [];
+						}
+						
+						if($.inArray(colIndex, this.options.onlyColumns) === -1){
+							
+							// Aggiunge l'indice della colonna a quelle da filtrare
+							this.options.onlyColumns.push(colIndex);
+						}
+					}
+				}, this));
+				
+			// Init Bootstrap Popovers for each heading
+			this.$table.find('tr:first')
+				.first()
+				.children('td,th')
+				.each($.proxy(function(colIndex, heading)
 				{
 					// Se la colonna è filtrabile...
-					if(!this.ignoredColumn(index)){
+					if(!this.ignoredColumn(colIndex)){
 						
 						var popoverToggle;
 						
 						// Se è stato impostato un selettore per la testata della colonna...
 						if($.fn.filterableUtils.notNull(this.options.popoverSelector)){
 							
-							// Elemento su cui cliccare per aprire il popover
+							// Elemento su cui cliccare per aprire il filterablePopover
 							popoverToggle = $(heading).find(this.options.popoverSelector);
 						}
 						// Altrimenti...
 						else{
 							
 							// No toggle element defined, wrap heading content for use as toggle
-							popoverToggle =  $(heading).wrapInner('<div />')
+							popoverToggle = $(heading).wrapInner('<div />')
 								.children()
 								.first();
 							
@@ -710,7 +773,13 @@
 						}
 						
 						// Assegna il metodo onFilter all'bottone che innesca il filtro
-						this.options.onFilter = $.proxy(this.onFilter, this);
+						if(typeof this.options.onFilter === 'function'){
+							
+							this.options.onFilter = $.proxy(this.options.onFilter, this);
+						} else{
+							
+							this.options.onFilter = $.proxy(this.onFilter, this);
+						}
 						
 						// Inizializza l'oggetto FilterablePopover
 						$(popoverToggle).attr('data-toggle', 'popover')
@@ -719,30 +788,30 @@
 						// Aggiunge l'oggetto FilterablePopover all'array popovers
 						this.popovers.push($(popoverToggle).data('filterablePopover'));
 						
-						// Imposta il valore di index in popover
-						this.popovers[index].index(index);
+						// Imposta il valore di index in filterablePopover
+						this.popovers[colIndex].index(colIndex);
 						
-						// Esegue all'apertura del popover
+						// Esegue all'apertura del filterablePopover
 						$(popoverToggle).on('show.bs.popover', $.proxy(function()
 						{
-							// Assegna la lista dei termini per il plugin autocomplete
-							this.popovers[index].lookup(this.autocompleteValues(index));
+							// Assegna la lista dei termini per il plugin Autocomplete
+							this.popovers[colIndex].lookup(this.autocompleteValues(colIndex));
 						}, this));
 						
 						// If there is an initial filter, go ahead and filter
-						var filterHash = this.filterHash(index);
-						var initialFilter = $.bbq.getState(filterHash) || '';
-						if(initialFilter !== ''){
+						var filterHash = this.filterHash(colIndex);
+						var initialQuery = $.bbq.getState(filterHash) || '';
+						if(initialQuery !== ''){
 
-							// Imposta il valore del campo di ricerca con il valore di query
-							this.popovers[index].input(initialFilter);
+							// Imposta il valore del campo di ricerca con il valore di query (initialQuery)
+							this.popovers[colIndex].input(initialQuery);
 							
-							// Assegna la classe css active all'elemento toggle del popover
+							// Assegna la classe css 'filterable-active' al toggler del filterablePopover
 							$(popoverToggle).addClass('filterable-active');
 							
-							// Filtra passando la query (initialFilter) 
-							// e il numero della colonna da filtrare (index)
-							this.filter(initialFilter, index);
+							// Filtra passando la query (initialQuery) 
+							// e il numero della colonna da filtrare (colIndex)
+							this.filter(initialQuery, colIndex);
 						}
 					} 
 					// Altrimenti...
@@ -752,7 +821,7 @@
 					}
 				}, this));
 			
-			// Close popovers on click ouside
+			// Close filterablePopover on click ouside
 			$('body').on('click.filterable', $.proxy(function(e)
 			{
 				this.closePopovers(e);
@@ -760,7 +829,7 @@
 			
 			// Bind an event to window.onhashchange that, 
 			// when the history state changes,
-			// iterates over all popover, 
+			// iterates over all filterablePopover, 
 			// getting their appropriate url from the
 			// current state.
 			$(window).bind('hashchange.filterable', $.proxy(function(e)
@@ -785,7 +854,7 @@
 				@param {Object} event event object
 				@param {Object} editable filterable instance (as here it cannot accessed via data('editable'))
 				**/
-				this.$element.triggerHandler('init', this);
+				this.$table.triggerHandler('init', this);
 			}, this);
 		},
 
@@ -795,8 +864,8 @@
 		**/
 		destroy: function()
 		{
-			this.$element.removeClass('filterable');
-			this.$element.removeData('filterable');
+			this.$table.removeClass('filterable');
+			this.$table.removeData('filterable');
 		}
 	};
 
@@ -810,13 +879,13 @@
 		// Return jquery object
 		return this.each(function()
 		{
-			var $this = $(this), // tabella
+			var $this = $(this), // jquery tabella
 				id = $this.attr('id'), // table ID
 				data = $this.data(datakey), // oggetto Filterable
 				options = typeof option === 'object' && option; // opzioni
 			
 			// Se l'oggetto Filterable non è stato inizializzato...
-			if(!data){
+			if(!data && typeof options === 'object'){
 				
 				// Inizializza l'oggetto Filterable e lo assegna alla tabella
 				$this.data(datakey, (data = new Filterable(this, options)));
@@ -860,7 +929,7 @@
 		ignoreCase: true,
 	
 		/**
-		Selector to use when making the popover toggle
+		Selector to use when making the filterablePopover toggler
 		@property popoverSelector
 		@type string
 		@default null
@@ -869,10 +938,10 @@
 	
 		/**
 		Function called before filtering is done.
-		@property beforeFilter(element, cellIndex, query)
+		@property beforeFilter(element, colIndex, query)
 		@default null
 		@example
-		beforeFilter: function(element, cellIndex, query) {
+		beforeFilter: function(element, colIndex, query) {
 		  // Manipulate DOM here
 		}
 		**/
@@ -880,10 +949,10 @@
 	
 		/**
 		Function called after filtering is done.
-		@property afterFilter(element, cellIndex, query)
+		@property afterFilter(element, colIndex, query)
 		@default null
 		@example
-		afterFilter: function(element, cellIndex, query) {
+		afterFilter: function(element, colIndex, query) {
 		  // Manipulate DOM here
 		}
 		**/
@@ -898,14 +967,14 @@
 	"use strict";
 	
 	// Costruttore
-	var FilterablePopover = function(heading, options)
+	var FilterablePopover = function(toggler, options)
 	{
-		this.$heading = $(heading); // jquery heading cell or icon
-		this.index; // heading index
-		this.value; // input value
+		this.$toggler = $(toggler); // jquery toggler del filterablePopover
+		this.colIndex; // col index
+		this.value; // input field value
 		
 		// Oggetto opzioni
-		this.options = $.extend({}, $.fn.filterable.defaults, options);
+		this.options = $.extend({}, $.fn.filterablePopover.defaults, options);
 		
 		// Chiama il metodo init
 		this.init();
@@ -923,14 +992,21 @@
 		Ritorna o imposta il numero della colonna
 		@method index()
 		**/
-		index: function(index)
+		index: function(colIndex)
 		{
-			if($.fn.filterableUtils.isNull(index)){
+			// Se colIndex è null...
+			if($.fn.filterableUtils.isNull(colIndex)){
 				
-				return this.index;
-			} else{
+				// Ritorna l'indice della colonna (0, 1, 2, ecc.)
+				// associata al filterablePopover
+				return this.colIndex;
+			} 
+			// Altrimenti...
+			else{
 				
-				this.index = index;
+				// Imposta il valore dell'indice della colonna
+				// associata al filterablePopover
+				this.colIndex = colIndex;
 			}
 		},
 		
@@ -938,14 +1014,19 @@
 		Ritorna o imposta il campo input
 		@method input()
 		**/
-		input: function(value)
+		input: function(query)
 		{
-			if($.fn.filterableUtils.isNull(value)){
+			// Se query è null...
+			if($.fn.filterableUtils.isNull(query)){
 				
-				return this.$content.find('.filter-input');
-			} else{
+				// Ritorna il valore del campo input del filterablePopover
+				return this.$body.find('.filter-input');
+			} 
+			// Altrimenti...
+			else{
 				
-				this.value = value;
+				// Imposta il valore con la query associata al filterablePopover
+				this.value = query;
 			}
 		},
 		
@@ -955,7 +1036,10 @@
 		**/
 		lookup: function(values)
 		{
-			this.$content.find('.filter-input')
+			// Chiama il metodo 'lookup' del plugin Autocomplete
+			// e gli passa tutti o parte dei contenuti della colonna
+			// per effettuare il suggest 
+			this.$body.find('.filter-input')
 				.filterableAutocomplete('lookup', values);
 		},
 		
@@ -965,48 +1049,36 @@
 		**/
 		init: function()
 		{
-			// Add 'filterable-popover' class to every heading element
-			this.$heading.addClass('filterable-popover');
+			// Add 'filterable-popover' css class to every filterablePopover toggler
+			this.$toggler.addClass('filterable-popover');
 			
-			// Template popover
-			var tplPopover = '<div class="popover" role="tooltip">'
-				+ '<div class="arrow"></div>'
-				+ '<h3 class="popover-header d-flex align-items-center"></h3>'
-				+ '<div class="popover-body"></div>'
-				+ '</div>';
+			// Template del filterablePopover
+			var tplPopover = this.options.tplPopover;
 			
-			// Contenuto del Body di popover
-			var content = '<form>'
-				+ '<div class="input-group">'
-				+ '<input type="search" class="form-control form-control-sm filter-input">'
-				+ '<div class="input-group-append">'
-				+ '<button class="btn btn-primary btn-sm filter-btn"><span class="fa fa-check"></span></button>'
-				+ '<button class="btn btn-danger btn-sm empty-input"><span class="fa fa-times"></span></button>'
-				+ '</div>'
-				+ '<div class="position-relative flex-fill w-100 autocomplete-container"></div>'
-				+ '</div>'
-				+ '</form>';
+			// Contenuto del Body del filterablePopover
+			var body = this.options.bodyPopover;
 			
 			// Crea l'elemento contenuto
-			this.$content = $(content);
+			this.$body = $(body);
 			
-			// Empty input
-			this.$content.find('.empty-input')
+			// L'evento svuota il campo input e 
+			// azzera il filtro per la colonna corrispondente
+			this.$body.find('.empty-input')
 				.on('click', $.proxy(function(e)
 				{
 					e.preventDefault();
 					
 					// Svuota il campo input
-					this.$content.find('.filter-input')
+					this.$body.find('.filter-input')
 						.val('');
 					
-					// Esegue il filtro
-					this.$content.find('.filter-btn')
+					// Esegue la funzione filtro
+					this.$body.find('.filter-btn')
 						.trigger('click.filterable');
 				}, this));
 			
-			// Filter button
-			this.$content.find('.filter-btn')
+			// L'evento esegue la funzione filtro
+			this.$body.find('.filter-btn')
 				.on('click.filterable', $.proxy(function(e)
 				{
 					e.preventDefault();
@@ -1014,34 +1086,56 @@
 					// Se esiste una funzione onFilter...
 					if(typeof this.options.onFilter === 'function'){
 						
-						// Esegue la funzione passando heading e valore del campo input
-						this.options.onFilter(this.$heading, this.$content.find('.filter-input').val(), this.index);
+						// Esegue il filtro passando il toggler, 
+						// il valore del campo input e l'indice della colonna
+						this.options.onFilter(
+							this.$toggler, 
+							this.$body.find('.filter-input').val(), 
+							this.colIndex
+						);
 					}
 				}, this));
 			
-			// Custom jQuery to hide popover on click of the close button
+			// Custom jQuery to hide filterablePopover on click of the close button in header
 			$(document).on('click.filterable', '.popover-header .close-popover', function(e)
 			{
 				e.preventDefault();
 				
-				// Elimina il popover
+				// Nasconde il filterablePopover
 				$(this).parents('.popover')
 					.popover('hide');
 			});
-			
+
 			// Inizializza l'oggetto FilterableAutocomplete
-			this.$content.find('.filter-input')
+			// associato al campo di input del filterablePopover
+			this.$body.find('.filter-input')
 				.filterableAutocomplete(this.options);
 			
-			var title = this.$heading.data('ftTitle') != ''? this.$heading.data('ftTitle') 
-					+ '<span class="fa fa-times ml-auto close-popover" role="button"></span>':
-					'';
+			// header title del filterablePopover
+			var title = typeof this.$toggler.data('ftTitle') != 'undefined'? 
+					this.$toggler.data('ftTitle'): 
+					this.$toggler.text();
+
+			// Se title non è vuoto...
+			if(title){
+				
+				// Se esiste un template per il title del filterablePopover...
+				if(this.options.titleTpl){
+					
+					// Prova a sostituire il segnaposto 'field' 
+					// con l'intestazione della colonna
+					title = this.options.titleTpl.replace('%field%', title);
+				}
+				
+				// Aggiungo il bottone Close all'header del filterablePopover 
+				title += '<span class="fa fa-times ml-auto close-popover" role="button"></span>';
+			}
 			
-			// Inizializza Bootstrap popover
-			this.$heading.popover($.extend({
+			// Inizializza Bootstrap Popovers
+			this.$toggler.popover($.extend({
 				container: 'body',
 				title: title,
-				content: this.$content,
+				content: this.$body,
 				sanitize: false,
 				html: true,
 				template: tplPopover,
@@ -1049,26 +1143,29 @@
 				customClass: 'filterable-popover'
 			}, this.options.popoverOptions));
 			
-			// Evento shown popover
-			this.$heading.on('shown.bs.popover', $.proxy(function()
+			// L'evento imposta un valore nel campo di ricerca
+			// e mette il focus sul campo
+			this.$toggler.on('shown.bs.popover', $.proxy(function()
 			{
-				// Imposta un valore nel campo di ricerca
-				// e mette il focus sul campo
-				this.$content.find('.filter-input')
-					.val(this.value)
-					.focus();
+				this.$body.find('.filter-input')
+					.val(this.value) // value
+					.focus(); // focus
 			}, this));
 			
-			// Evento show popover
-			this.$heading.on('show.bs.popover', $.proxy(function()
+			// L'evento imposta la classe css 'filterable-popover-click'
+			// sul toggler del filterablePopover per segnalare visivamente
+			// la colonna selezionata
+			this.$toggler.on('show.bs.popover', $.proxy(function()
 			{
-				this.$heading.addClass('filterable-popover-click');
+				this.$toggler.addClass('filterable-popover-click');
 			}, this));
 			
-			// Evento hide popover
-			this.$heading.on('hide.bs.popover', $.proxy(function()
+			// L'evento rimuove la classe css 'filterable-popover-click'
+			// sul toggler del filterablePopover per segnalare visivamente
+			// che la colonna non è più selezionata
+			this.$toggler.on('hide.bs.popover', $.proxy(function()
 			{
-				this.$heading.removeClass('filterable-popover-click');
+				this.$toggler.removeClass('filterable-popover-click');
 			}, this));
 
 			// Finilize init
@@ -1082,18 +1179,18 @@
 				@param {Object} event event object
 				@param {Object} editable filterable instance (as here it cannot accessed via data('editable'))
 				**/
-				this.$heading.triggerHandler('init', this);
+				this.$toggler.triggerHandler('init', this);
 			}, this);
 		},
 
 		/**
-		Removes filterablePopover feature from heading
+		Removes filterablePopover feature from toggler
 		@method destroy()
 		**/
 		destroy: function()
 		{
-			this.$heading.removeClass('filterable-popover filterable-popover-click');
-			this.$heading.removeData('filterablePopover');
+			this.$toggler.removeClass('filterable-popover filterable-popover-click');
+			this.$toggler.removeData('filterablePopover');
 		}
 	}
 		
@@ -1107,12 +1204,12 @@
 		// Return jquery object
 		return this.each(function()
 		{
-			var $this = $(this), // riga
+			var $this = $(this), // jquery toggler filterablePopover
 				data = $this.data(datakey), // oggetto FilterablePopover
 				options = typeof option === 'object' && option; // opzioni
-			
+
 			// Se l'oggetto FilterablePopover non è stato inizializzato...
-			if(!data){
+			if(!data && typeof options === 'object'){
 				
 				// Inizializza l'oggetto FilterablePopover e lo assegna alla tabella
 				$this.data(datakey, (data = new FilterablePopover(this, options)));
@@ -1132,17 +1229,53 @@
 		
 		/**
 		Function called for filtering column.
-		@property onFilter(popoverToggle, query, cellIndex)
+		@property onFilter(popoverToggle, query, colIndex)
 		@default null
 		@example
-		onFilter: function(popoverToggle, query, cellIndex) {
+		onFilter: function(popoverToggle, query, colIndex) {
 		  // Execute filtering
 		}
 		**/
 		onFilter: null,
 		
 		/**
-		Additional options for popover plugin
+		Template per il filterablePopover.
+		@property tplPopover
+		@default html
+		**/
+		tplPopover: '<div class="popover" role="tooltip">'
+			+ '<div class="arrow"></div>'
+			+ '<h3 class="popover-header d-flex align-items-center"></h3>'
+			+ '<div class="popover-body"></div>'
+			+ '</div>',
+		
+		/**
+		Contenuto del Body di filterablePopover
+		@property bodyPopover
+		@default html
+		**/
+		bodyPopover: '<form>'
+			+ '<div class="input-group">'
+			+ '<input type="search" class="form-control form-control-sm filter-input">'
+			+ '<div class="input-group-append">'
+			+ '<button class="btn btn-primary btn-sm filter-btn"><span class="fa fa-check"></span></button>'
+			+ '<button class="btn btn-danger btn-sm empty-input"><span class="fa fa-times"></span></button>'
+			+ '</div>'
+			+ '<div class="position-relative flex-fill w-100 autocomplete-container"></div>'
+			+ '</div>'
+			+ '</form>',
+		
+		/**
+		Template per il title del filterablePopover.
+		@property titleTpl
+		@default null
+		@example
+		titleTpl: 'Filtra per %field%'
+		**/
+		titleTpl: null,
+		
+		/**
+		Additional options for Bootstrap Popovers plugin
 		@property popoverOptions
 		@type object
 		@default null
@@ -1160,10 +1293,10 @@
 	// Costruttore
 	var FilterableAutocomplete = function(input, options)
 	{
-		this.$input = $(input); // jquery input
+		this.$input = $(input); // jquery input field filterablePopover
 		
 		// Oggetto opzioni
-		this.options = $.extend({}, $.fn.filterable.defaults, options);
+		this.options = $.extend({}, $.fn.filterableAutocomplete.defaults, options);
 		
 		// Chiama il metodo init
 		this.init();
@@ -1178,7 +1311,8 @@
 		constructor: FilterableAutocomplete,
 		
 		/**
-		Array su cui effettuare la ricerca
+		Imposta in Autocomplete l'array dei valori 
+		su cui effettuare la ricerca dei suggerimenti
 		@method lookup()
 		**/
 		lookup: function(values)
@@ -1192,10 +1326,10 @@
 		**/
 		init: function()
 		{
-			// Add 'filterable-autocomplete' class to every input element
+			// Add 'filterable-autocomplete' css class to every input field
 			this.$input.addClass('filterable-autocomplete');
 			
-			// Inizializza autocomplete plugin
+			// Inizializza il plugin Autocomplete
 			this.$input.autocomplete($.extend({
 				lookup: [],
 				appendTo: this.$input.siblings('.autocomplete-container')
@@ -1237,12 +1371,12 @@
 		// Return jquery object
 		return this.each(function()
 		{
-			var $this = $(this), // riga
+			var $this = $(this), // jquery input
 				data = $this.data(datakey), // oggetto FilterableAutocomplete
 				options = typeof option === 'object' && option; // opzioni
-			
+
 			// Se l'oggetto FilterableAutocomplete non è stato inizializzato...
-			if(!data){
+			if(!data && typeof options === 'object'){
 				
 				// Inizializza l'oggetto FilterableAutocomplete e lo assegna alla tabella
 				$this.data(datakey, (data = new FilterableAutocomplete(this, options)));

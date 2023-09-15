@@ -1,1 +1,7 @@
 **/_notes
+/lib
+.bowerrc
+.yarnrc
+yarn.lock
+/example/favicon.ico
+/example/img

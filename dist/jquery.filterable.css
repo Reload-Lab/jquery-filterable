@@ -1,6 +1,9 @@
 @charset "utf-8";
 /* CSS Document */
 
+.filterable-mismatch {
+	display: none;
+}
 .filterable tr:first-child .filterable-popover,
 .filterable tr:first-child .filterable-popover-click ,
 .filterable tr:first-child a.filterable-popover-click {
@@ -18,10 +21,35 @@
 	border-bottom-style: none;
 	font-style: normal;
 }
-.filterable tr:first-child .filterable-active {
+.filterable tr:first-child .filterable-active,
+.filterable tr:first-child .filterable-active:hover {
 	color: #5bb75b;
 	font-style: italic;
 }
-.filterable-mismatch {
-	display: none;
+
+/* Jquery autocomplete */
+.filterable-popover .autocomplete-suggestions {
+	border: 1px solid #dddddd;
+	background: #fff;
+	overflow: auto;
+	color: #444;
 }
+.filterable-popover .autocomplete-suggestion {
+	padding: 4px 9px; 
+	white-space: nowrap; 
+	overflow: hidden;
+}
+.filterable-popover .autocomplete-selected { 
+	background: #d9edf7;
+}
+.filterable-popover .autocomplete-suggestions strong {
+	color: #006AA0;
+}
+.filterable-popover .autocomplete-group {
+	padding: 4px 9px; 
+}
+.filterable-popover .autocomplete-group strong {
+	display: block; 
+	border-bottom: 1px solid #dddddd;
+}
+/* § Jquery autocomplete */
