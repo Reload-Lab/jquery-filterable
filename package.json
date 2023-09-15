@@ -22,11 +22,11 @@
     "url": "git+https://github.com/Reload-Lab/jquery-filterable.git"
   },
   "dependencies": {
-    "jquery": "^3.7.0",
-	"jquery-migrate": "1.4.1",
     "bootstrap": "4.6.2",
-	"font-awesome": "4.7.0",
-	"devbridge-autocomplete": "^1.4.11"
+    "devbridge-autocomplete": "^1.4.11",
+    "font-awesome": "4.7.0",
+    "jquery": "^3.7.0",
+    "jquery-migrate": "1.4.1"
   },
   "bugs": "https://github.com/Reload-Lab/jquery-filterable/issues"
 }
