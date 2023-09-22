@@ -2,8 +2,8 @@
  * jQuery filterable Plugin
  * https://github.com/Reload-Lab/jquery-filterable
  *
- * @updated September 15, 2023
- * @version 1.0.0
+ * @updated September 22, 2023
+ * @version 1.0.1
  *
  * @author Domenico Gigante <domenico.gigante@reloadlab.it>
  * @copyright (c) 2023 Reload Laboratorio Multimediale <info@reloadlab.it> (https://www.reloadlab.it)
@@ -611,7 +611,10 @@
 			if(query === ''){
 				
 				// Remove the state
-				$.bbq.removeState(this.filterHash(colIndex));
+				if(this.options.useHash === true){
+					
+					$.bbq.removeState(this.filterHash(colIndex));
+				}
 				
 				// Rimuove la classe css 'filterable-active'
 				$(popoverToggle).removeClass('filterable-active');
@@ -620,8 +623,11 @@
 			else{
 				
 				// Set the state
-				state[this.filterHash(colIndex)] = query;
-				$.bbq.pushState(state);
+				if(this.options.useHash === true){
+					
+					state[this.filterHash(colIndex)] = query;
+					$.bbq.pushState(state);
+				}
 				
 				// Aggiunge la classe 'filterable-active'
 				$(popoverToggle).addClass('filterable-active');
@@ -799,19 +805,22 @@
 						}, this));
 						
 						// If there is an initial filter, go ahead and filter
-						var filterHash = this.filterHash(colIndex);
-						var initialQuery = $.bbq.getState(filterHash) || '';
-						if(initialQuery !== ''){
-
-							// Imposta il valore del campo di ricerca con il valore di query (initialQuery)
-							this.popovers[colIndex].input(initialQuery);
+						if(this.options.useHash === true){
 							
-							// Assegna la classe css 'filterable-active' al toggler del filterablePopover
-							$(popoverToggle).addClass('filterable-active');
-							
-							// Filtra passando la query (initialQuery) 
-							// e il numero della colonna da filtrare (colIndex)
-							this.filter(initialQuery, colIndex);
+							var filterHash = this.filterHash(colIndex);
+							var initialQuery = $.bbq.getState(filterHash) || '';
+							if(initialQuery !== ''){
+	
+								// Imposta il valore del campo di ricerca con il valore di query (initialQuery)
+								this.popovers[colIndex].input(initialQuery);
+								
+								// Assegna la classe css 'filterable-active' al toggler del filterablePopover
+								$(popoverToggle).addClass('filterable-active');
+								
+								// Filtra passando la query (initialQuery) 
+								// e il numero della colonna da filtrare (colIndex)
+								this.filter(initialQuery, colIndex);
+							}
 						}
 					} 
 					// Altrimenti...
@@ -834,13 +843,16 @@
 			// current state.
 			$(window).bind('hashchange.filterable', $.proxy(function(e)
 			{
-				$.each(this.popovers, $.proxy(function(popoverIndex, popover)
-				{
-					if($.fn.filterableUtils.notNull(popover)){
+				if(this.options.useHash === true){
 						
-						this.hashChange(popover, popoverIndex);
-					}
-				}, this));
+					$.each(this.popovers, $.proxy(function(popoverIndex, popover)
+					{
+						if($.fn.filterableUtils.notNull(popover)){
+							
+							this.hashChange(popover, popoverIndex);
+						}
+					}, this));
+				}
 			}, this));
 
 			// Finilize init
@@ -935,6 +947,14 @@
 		@default null
 		**/
 		popoverSelector: null,
+	
+		/**
+		Use hashchange event and back button
+		@property useHash
+		@type boolean
+		@default true
+		**/
+		useHash: true,
 	
 		/**
 		Function called before filtering is done.
@@ -1064,7 +1084,7 @@
 			// L'evento svuota il campo input e 
 			// azzera il filtro per la colonna corrispondente
 			this.$body.find('.empty-input')
-				.on('click', $.proxy(function(e)
+				.on('click.filterable', $.proxy(function(e)
 				{
 					e.preventDefault();
 					

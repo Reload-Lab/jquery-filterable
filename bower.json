@@ -29,6 +29,7 @@
 	"jquery-migrate-official": "1.4.1",
     "bootstrap": "4.6.2",
 	"font-awesome": "4.7.0",
-	"devbridge-autocomplete": "^1.4.11"
+	"devbridge-autocomplete": "^1.4.11",
+	"Reload-Lab/jquery-bbq": "1.3.1"
   }
 }
